@@ -1,0 +1,42 @@
+// Create each measure separately. Names assume the documented table names.
+// Monetary results are INR. Set currency/percentage formats in model properties.
+
+Net Sales INR = SUM(fact_sales[net_sales_inr])
+
+Sales Before Refunds INR = SUM(fact_sales[sales_before_refunds_inr])
+
+Refunds INR = SUM(fact_sales[refund_inr])
+
+Orders Placed = DISTINCTCOUNT(fact_sales[order_id])
+
+Fulfilled Orders =
+CALCULATE(
+    DISTINCTCOUNT(fact_sales[order_id]),
+    KEEPFILTERS(fact_sales[order_status] <> "CANCELLED")
+)
+
+Returned Orders =
+CALCULATE(
+    DISTINCTCOUNT(fact_sales[order_id]),
+    KEEPFILTERS(fact_sales[order_status] = "RETURNED")
+)
+
+Return Rate = DIVIDE([Returned Orders], [Fulfilled Orders])
+
+Net Sales per Fulfilled Order INR = DIVIDE([Net Sales INR], [Fulfilled Orders])
+
+Shipments = COUNTROWS(fact_shipments)
+
+On-Time Shipments = SUM(fact_shipments[on_time_flag])
+
+On-Time Delivery Rate = DIVIDE([On-Time Shipments], [Shipments])
+
+Average Delivery Days = AVERAGE(fact_shipments[delivery_days])
+
+Net Sales YTD INR =
+TOTALYTD([Net Sales INR], dim_date[date])
+
+// Product/category filters affect sales only, not shipments. Keep the delivery
+// page to shared date/customer/warehouse slicers, or explicitly design a bridge.
+// Return Rate respects the current status filter; use it without a status slicer
+// for the overall returned / fulfilled ratio.
