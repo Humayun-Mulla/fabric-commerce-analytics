@@ -1,118 +1,41 @@
-# Fabric Commerce Analytics
+# Commerce and fulfillment analytics
 
-A practical Microsoft Fabric / DP-600 starter project for exploring sales, returns,
-and delivery performance with **entirely fictional commerce data**.
+How much revenue remains after refunds, and how often does a warehouse deliver by its promised date? This Microsoft Fabric project answers both questions from the same orders. Sales are recorded by order line. Delivery is measured once per shipment.
 
-Maintained by [Humayun-Mulla](https://github.com/Humayun-Mulla).
+## Operating snapshot
 
-## What works today
+The reproducible 2025 order book covers five warehouses. The figures below come from the 10,000-order run with seed 600.
 
-- A deterministic Python generator for four dimensions and two fact tables.
-- Six automated tests covering keys, money, shipments, checksums, and reproducibility.
-- An importable Fabric notebook with explicit types and validation before Delta writes.
-- T-SQL analysis queries, DAX measures, a data dictionary, and guided practice tasks.
-- A small `sample_data.zip` for trying the project without generating data first.
+| Measure | Result | Calculation |
+| --- | ---: | --- |
+| Fulfilled orders | 9,450 | 10,000 placed less 550 cancellations |
+| Net sales | ₹533,653,449.78 | ₹582,378,313.68 after discounts less ₹48,724,863.90 in refunds |
+| Return rate | 8.01% | 757 returned orders divided by 9,450 fulfilled |
+| On-time delivery | 79.31% | 7,495 deliveries on or before promise divided by 9,450 shipments |
 
-**Status: starter / learning project.** The Python generator is tested locally.
-The Fabric notebook, SQL, DAX, and report instructions still require validation in
-a Fabric workspace. There is no deployed dashboard or claimed production usage.
-See [VALIDATION.md](VALIDATION.md) for the recorded checks.
+**Why the model has two facts.** Joining shipments to sales lines by order ID expands 9,450 shipments to 23,634 rows. A four-line order would carry four times the weight of a single-line order in a delivery KPI. The warehouse query counts shipments directly. The daily comparison aggregates each fact by order date before joining the results. [Inspect the SQL](analytics.sql) and the [worked modeling example](MODEL_DECISIONS.md).
 
-This is an independent educational project. It contains no Amazon data, customer
-records, internal business information, or proprietary code. Data patterns are
-illustrative assumptions, not estimates of any real company's performance.
+## Explore the implementation
 
-## Start locally
+| Question | Implementation |
+| --- | --- |
+| How does the load handle duplicate keys and invalid monetary amounts? | [PySpark ingestion notebook](fabric_load.ipynb) |
+| How do refunds and cancellations affect sales? | [Data dictionary and business rules](DATA_DICTIONARY.md) |
+| Which dimensions can filter delivery performance? | [Model relationships and report setup](FABRIC_SETUP.md) |
+| How do the metrics respond to report filters? | [DAX measures](measures.dax) |
+| How do the totals reconcile? | [Validation record](VALIDATION.md) |
 
-Install Python 3.10 or newer. No additional packages are required for the generator.
-Download this repository with **Code > Download ZIP**, extract it, and open a
-terminal in the extracted folder.
+## Reproduce the numbers
 
-```bash
-python generate_data.py --orders 10000 --seed 600 --output data/demo
+From the repository root, use Python 3.10+ and an empty output directory.
+
+```sh
+python generate_data.py --orders 10000 --seed 600 --output data/commerce
 python -m unittest -v test_data.py
 ```
 
-On Windows, use `py` instead of `python` if that is how Python is installed.
-The output folder must be empty; choose a new folder to run another scenario.
-Outputs: six CSV files plus a manifest containing counts, totals, and SHA-256 hashes.
-The same seed and arguments reproduce the same bytes with the same Python version.
+The generator writes six CSV files and a manifest with row counts, financial totals in paise and SHA-256 checksums. The [200-order extract](sample_data.zip) uses the same schema and has its own control totals.
 
-For a quick preview, extract `sample_data.zip`. It includes 200 orders, with multiple
-sales lines per order, plus the same dimensions and manifest format.
+For Fabric, upload the six CSVs, attach the lakehouse to the notebook and validate the Delta tables against the manifest. Then use the SQL endpoint and semantic model to reconcile the same measures. [Fabric setup](FABRIC_SETUP.md).
 
-## Run in Fabric
-
-Follow [FABRIC_SETUP.md](FABRIC_SETUP.md): upload the CSVs to a demo lakehouse,
-import `fabric_load.ipynb`, run the validations, and create a semantic model.
-Fabric capacity or an eligible trial is required; running this locally needs no cloud account.
-
-```mermaid
-flowchart TD
-    A["Synthetic CSVs"] --> B["Lakehouse Files: raw data"]
-    B --> C["Notebook: types and checks"]
-    C --> D["Delta dimensions and facts"]
-    D --> E["SQL analysis"]
-    D --> F["Semantic model and DAX"]
-    F --> G["Sales and delivery report"]
-```
-
-## Model and metrics
-
-| Table | Grain |
-| --- | --- |
-| `dim_date` | One row per calendar day in 2025 |
-| `dim_customer` | One row per fictional customer |
-| `dim_product` | One row per fictional product |
-| `dim_warehouse` | One row per fictional warehouse |
-| `fact_sales` | One row per order line |
-| `fact_shipments` | One row per non-cancelled order |
-
-**Never join the two facts directly and sum shipment counts.** One shipment can
-match several sales lines. Analyze each fact through shared dimensions, or aggregate
-both to the same grain before joining.
-
-- Net sales = sales after discounts and cancellations, minus refunds.
-- Returned orders receive a full refund; cancelled orders have no sales or shipment.
-- On-time delivery = delivered on or before the promised date, divided by all shipments.
-- All money is INR. Taxes, shipping charges, partial returns, and profit are not modeled.
-
-See [DATA_DICTIONARY.md](DATA_DICTIONARY.md) for exact definitions and limitations.
-
-## Files
-
-| File | Purpose |
-| --- | --- |
-| `generate_data.py` | Reproducible source data |
-| `test_data.py` | Local integrity tests |
-| `sample_data.zip` | Small ready-to-upload dataset |
-| `fabric_load.ipynb` | CSV-to-Delta loading and validation |
-| `analytics.sql` | T-SQL queries for the SQL analytics endpoint |
-| `measures.dax` | Copy one measure at a time into the semantic model |
-| `FABRIC_SETUP.md` | Fabric and report walkthrough |
-| `DATA_DICTIONARY.md` | Grain, columns, and business rules |
-| `LEARNING_PATH.md` | Exercises and coverage gaps |
-| `CONTRIBUTING.md` | How to contribute useful improvements |
-| `VALIDATION.md` | What has and has not been tested |
-
-## Roadmap
-
-- Validate the notebook and metric reconciliation in Fabric.
-- Add a Power BI project and screenshots after completing the report.
-- Add deliberate dirty-data scenarios and quarantined-row reporting.
-- Add incremental ingestion and late-arriving shipment events.
-- Extend security exercises and add an Eventhouse / KQL track.
-
-This covers selected DP-600 skills, not the full exam syllabus. Start with the
-[current Microsoft study guide](https://learn.microsoft.com/credentials/certifications/resources/study-guides/dp-600).
-
-## Contribute
-
-Issues and pull requests with reproducible fixes, tests, or teaching improvements
-are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
-The initial scaffolding was prepared with AI assistance; all changes should be reviewed
-and verified. No external adoption or maintainer-program eligibility is claimed.
-
-## License
-
-MIT. See [LICENSE](LICENSE). Generated fictional example data is included under the same license.
+[MIT license](LICENSE)

@@ -1,4 +1,4 @@
-"""Generate deterministic fictional commerce data using Python's standard library."""
+"""Generate reproducible commerce order books using Python's standard library."""
 import argparse
 import csv
 import hashlib

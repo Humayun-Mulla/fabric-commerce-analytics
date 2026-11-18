@@ -6,11 +6,11 @@ Use `sample_data.zip`, or run the generator as described in the README. The loca
 generator uses Python's standard library. The Fabric notebook needs the PySpark
 runtime provided by Fabric; it is not a local Python script.
 
-## 2. Create a demo lakehouse
+## 2. Create a project lakehouse
 
 In a workspace assigned to Fabric capacity or an eligible trial, create a new
-lakehouse named `commerce_demo`. Keep **Lakehouse schemas** enabled. Do not use
-a lakehouse with production tables for this exercise.
+lakehouse named `commerce_analytics`. Keep **Lakehouse schemas** enabled. Do not use
+a lakehouse with production tables for this load.
 
 In Files, create a `commerce` folder and upload the **six extracted CSV files** there.
 The Spark paths should look like `Files/commerce/fact_sales.csv`. Keep `manifest.json`
@@ -18,7 +18,7 @@ alongside them for reconciliation. Upload the files themselves, not the ZIP.
 
 ## 3. Import and run the notebook
 
-Import `fabric_load.ipynb` into Fabric. Attach `commerce_demo` as the default lakehouse.
+Import `fabric_load.ipynb` into Fabric. Attach `commerce_analytics` as the default lakehouse.
 Review the first code cell. `BASE_PATH` is `Files/commerce`; adjust it only if you
 used a different folder. Run all cells in order.
 
@@ -27,7 +27,7 @@ conflicting primary keys and missing required fields, checks foreign keys and
 financial rules, and then writes six Delta tables in `dbo`.
 
 By default it refuses to replace existing output tables. For a deliberate full
-refresh in this **demo lakehouse**, set `REPLACE_DEMO_TABLES = True` and rerun.
+refresh in this **project lakehouse**, set `REPLACE_PROJECT_TABLES = True` and rerun.
 That setting replaces the six project tables. Writes are separate per table,
 not a multi-table transaction; rerun the full notebook after any failed load.
 
@@ -43,7 +43,7 @@ Compare table counts too. Do not proceed to reporting if these differ.
 ## 5. Build the semantic model
 
 Create a new semantic model from the six Delta tables. Use Direct Lake if available
-in your capacity/setup. As an alternative learning path, connect Power BI Desktop
+in your capacity/setup. For Import mode, connect Power BI Desktop
 to the SQL analytics endpoint using Import, and document that storage-mode choice.
 Create these **one-to-many, single-direction** relationships:
 
@@ -75,7 +75,7 @@ not a file that automatically deploys a semantic model.
 Avoid a product slicer on the delivery page: product does not filter the shipment
 fact in this model. Returned shipments are included in delivery performance.
 YTD is based on order date; the dataset contains a single order year, so do not
-claim year-over-year analysis from this sample.
+claim year-over-year analysis from this date range.
 
 ## 7. Record evidence
 
@@ -89,7 +89,7 @@ real customer data. Update `VALIDATION.md` with what you personally verified.
 - [Notebook loading and paths](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-notebook-load-data)
 - [Lakehouse schemas](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-schemas)
 - [SQL analytics endpoint](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-sql-analytics-endpoint)
-- [DP-600 study guide](https://learn.microsoft.com/credentials/certifications/resources/study-guides/dp-600)
 
-Interfaces and exam objectives can change. This repository does not provision a
+
+ This repository does not provision a
 workspace, enable billable capacity, or deploy a report automatically.

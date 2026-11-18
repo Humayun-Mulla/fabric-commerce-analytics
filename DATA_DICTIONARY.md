@@ -8,9 +8,9 @@ and 365 date records. Sales line and shipment counts depend on the seed.
 | Table | Columns and meaning |
 | --- | --- |
 | `dim_date` | `date_key` integer YYYYMMDD; `date` ISO date; `year`; `month_number` 1-12; `month_name` English abbreviation; `day_of_week` ISO Monday=1 |
-| `dim_customer` | `customer_key` unique integer; fictional `customer_label`; illustrative `city` and `region` |
-| `dim_product` | `product_key` unique integer; fictional `product_label`; `category`; `list_price_inr` decimal(18,2) |
-| `dim_warehouse` | `warehouse_key` unique integer; fictional `warehouse_label`; illustrative `city` and `region` |
+| `dim_customer` | `customer_key` unique integer; `customer_label`; `city` and `region` |
+| `dim_product` | `product_key` unique integer; `product_label`; `category`; `list_price_inr` decimal(18,2) |
+| `dim_warehouse` | `warehouse_key` unique integer; `warehouse_label`; `city` and `region` |
 
 ## Sales: one order line per row
 
@@ -51,14 +51,14 @@ All shipments in this historical snapshot have been delivered; there are no open
 Delivery metrics are analyzed by **order date**. To analyze by delivery date, extend
 the date dimension beyond 2025 and add a role-playing date relationship.
 
-## Intentional simplifications
+## Source and modeling assumptions
 
-- One country and currency; city/region values are illustrative categories.
-- Fixed product prices and no slowly changing dimensions in the starter.
-- Weighted order dates give Oct-Dec a higher frequency. These are invented weights.
+- One country and currency; city/region values are categories.
+- Fixed product prices and no slowly changing dimensions in this snapshot.
+- Weighted order dates give Oct-Dec a higher frequency. The generator configures this seasonal pattern.
 - Approximate status probabilities: 87% completed, 8% returned, 5% cancelled.
-  Actual sample percentages vary. Do not present them as real company statistics.
+  Observed rates vary by seed.
 - One warehouse and one shipment per order; no split shipments or partial returns.
 - Local generation holds shipment records in memory. Start at 10,000 orders;
-  this is a learning dataset, not an enterprise-scale load benchmark.
+  larger runs require additional memory.
 - No names, emails, addresses, payment data, or employer information from real people.
